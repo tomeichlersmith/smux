@@ -17,11 +17,12 @@ __smux_help() {
   Using ssh and tmux on remote computers.
 
  USAGE: 
-  smux [-h|--help] [-l|--list] <host> [session]
+  smux [SSH Options] [--help] [--list] <host> [session]
 
  OPTIONS:
-  -h|--help : print this help and exit
-  -l|--list : list the sessions on the input host and exit
+  SSH Options : all single-dash options are provided to ssh
+  --help      : print this help and exit
+  --list      : list the sessions on the input host and exit
 
  ARGUMENTS:
   host      : (required) hostname of computer you wish to attach to
@@ -36,7 +37,10 @@ HELP
 # Outputs:
 #   print of tmux sessions on that host (empty if there are none)
 __smux_list() {
-  ssh -t "$1" "tmux ls 2> /dev/null"
+  # we want the ssh options to be broken by whitespace and are two
+  # lazy to implement the workarounds described in the wiki
+  # shellcheck disable=SC2086
+  ssh ${__smux_ssh_opts} -t "$1" "tmux ls 2> /dev/null"
   return $?
 }
 
@@ -47,24 +51,63 @@ __smux_list() {
 # Outputs:
 #   none
 __smux_attach() {
-  ssh -t "$1" "tmux attach ${2:+-t} ${2} || tmux new ${2:+-s} $2"
+  # we want the ssh options to be broken by whitespace and are two
+  # lazy to implement the workarounds described in the wiki
+  # shellcheck disable=SC2086
+  ssh ${__smux_ssh_opts} -t "$1" "tmux attach ${2:+-t} ${2} || tmux new ${2:+-s} $2"
   return $?
 }
 
-case "$1" in
-  ""|-h|--help)
-    __smux_help
-    exit 0
-    ;;
-  -l|--list)
-    __smux_list "$2"
-    exit 0
-    ;;    
-  -*)
-    echo "ERR: Unknown option $1"
-    exit 1
-    ;;
-  *)
-    __smux_attach "$1" "$2"
-    exit $?
-esac
+__smux_ssh_opts=""
+__list=""
+__smux_dest=""
+__smux_sesh=""
+while :; do
+  case $1 in
+    --help)
+      __smux_help
+      exit 0
+      ;;
+    --list)
+      __list="list"
+      ;;
+    --*)
+      # double-dash, expected smux option
+      echo "ERROR: Unrecognized smux option '$1'."
+      exit 1
+      ;;
+    -*)
+      # single dash, expect ssh option
+      case $1 in
+        -B|-b|-c|-D|-E|-e|-F|-I|-i|-J|-L|-l|-m|-O|-o|-p|-Q|-R|-S|-W|-w)
+          # these ssh options have an argument after them
+          __smux_ssh_opts="${__smux_ssh_opts} $1 $2"
+          shift
+          ;;
+        *)
+          # other ssh options are just flags
+          __smux_ssh_opts="${__smux_ssh_opts} $1"
+      esac
+      ;;
+    *)
+      # no dash, positional smux arguments
+      if [ -z "${__smux_dest}" ]; then
+        __smux_dest="$1"
+      elif [ -z "${__smux_sesh}" ]; then
+        __smux_sesh="$1"
+      else
+        echo "ERROR: More than two positional arguments provided to smux"
+        exit 1
+      fi
+      ;;
+  esac
+  shift
+done
+
+if [ "${__list}" = "list" ]; then
+  __smux_list "${__smux_dest}"
+  exit $?
+else
+  __smux_attach "${__smux_dest}" "${__smux_sesh}"
+  exit $?
+fi

@@ -4,7 +4,7 @@
 
 # SYNOPSIS
 
-**smux** [-hl] destination [session]
+**smux** [SSH Options] [\-\-help] [\-\-list] destination [session]
 
 # DESCRIPTION
 
@@ -12,9 +12,11 @@
 
 ## OPTIONS
 
-**-h**    show the help message and exit
+**SSH Options** all single-dash options are provided to the ssh command
 
-**-l**    list the tmux sessions on the given destination rather than trying to connect
+**\-\-help**      show the help message and exit
+
+**\-\-list**      list the tmux sessions on the given destination rather than trying to connect
 
 ## ARGUMENTS
 
@@ -34,7 +36,7 @@ One benefit of tmux is that it can host many sessions on the same machine at onc
 
 Want to see what tmux sessions are already created on a specific remote, you can use the list option.
 
-    smux -l destination
+    smux --list destination
 
 # CONTRIBUTING
 

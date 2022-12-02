@@ -11,7 +11,7 @@ smux
 .fi
 .SH SYNOPSIS
 .PP
-\f[B]smux\f[R] [-hl] destination [session]
+\f[B]smux\f[R] [SSH Options] [--help] [--list] destination [session]
 .SH DESCRIPTION
 .PP
 \f[B]smux\f[R] is a light, POSIX-compliant wrapper around ssh and tmux,
@@ -19,10 +19,13 @@ allowing the user to directly attach to remote tmux sessions with one
 command.
 .SS OPTIONS
 .PP
-\f[B]-h\f[R] show the help message and exit
+\f[B]SSH Options\f[R] all single-dash options are provided to the ssh
+command
 .PP
-\f[B]-l\f[R] list the tmux sessions on the given destination rather than
-trying to connect
+\f[B]--help\f[R] show the help message and exit
+.PP
+\f[B]--list\f[R] list the tmux sessions on the given destination rather
+than trying to connect
 .SS ARGUMENTS
 .PP
 \f[B]destination\f[R] remote host to connect to via ssh
@@ -56,7 +59,7 @@ you can use the list option.
 .IP
 .nf
 \f[C]
-smux -l destination
+smux --list destination
 \f[R]
 .fi
 .SH CONTRIBUTING
