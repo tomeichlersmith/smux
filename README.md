@@ -1,6 +1,6 @@
 # NAME
 
-	smux
+smux v1.0.0
 
 # SYNOPSIS
 

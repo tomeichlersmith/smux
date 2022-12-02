@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with smux; if not, see <http://www.gnu.org/licenses/>.
 
+smux_version=1.0.0
+
 # POSIX
 set -o errexit
 set -o nounset
@@ -34,6 +36,7 @@ __smux_help() {
   SSH Options : all single-dash options are provided to ssh
   --help      : print this help and exit
   --list      : list the sessions on the input host and exit
+  --version   : print version and exit
 
  ARGUMENTS:
   host      : (required) hostname of computer you wish to attach to
@@ -77,6 +80,10 @@ while [ "$#" -gt 0 ]; do
   case $1 in
     --help)
       __smux_help
+      exit 0
+      ;;
+    --version)
+      echo "smux ${smux_version}"
       exit 0
       ;;
     --list)

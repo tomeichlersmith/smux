@@ -21,9 +21,6 @@
 set -o errexit
 set -o nounset
 
-verbose=0
-devel=0
-
 # Print usage to stdout.
 # Arguments:
 #   None
@@ -34,13 +31,17 @@ show_help() {
 install --prefix /usr/local
 
 Options:
-	--prefix/-P:		base bath where all files will be deployed (default /usr/local if root, ~/.local if not)
+	--prefix/-p:		base bath where all files will be deployed (default /usr/local if root, ~/.local if not)
   --devel/-d:   symlink to install location rather than copy, helpful for testing during development
                 ignored if not in the repository
 	--help/-h:		show this message
 	-v:			show more verbosity
 EOF
 }
+
+verbose=0
+devel=0
+prefix=""
 
 # Parse arguments
 while [ "$#" -gt 0 ]; do
@@ -58,7 +59,7 @@ while [ "$#" -gt 0 ]; do
       shift
       devel=1
       ;;
-		-P | --prefix)
+		-p | --prefix)
 			if [ -n "$2" ]; then
 				prefix="$2"
 				shift
