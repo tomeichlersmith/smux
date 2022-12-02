@@ -17,10 +17,9 @@
 # You should have received a copy of the GNU General Public License
 # along with smux; if not, see <http://www.gnu.org/licenses/>.
 
-# POSIX
-
 next=0
 verbose=0
+devel=0
 version=0.0.1
 
 # Print usage to stdout.
@@ -34,6 +33,8 @@ install --prefix /usr/local
 
 Options:
 	--prefix/-P:		base bath where all files will be deployed (default /usr/local if root, ~/.local if not)
+  --devel/-d:   symlink to install location rather than copy, helpful for testing during development
+                ignored if not in the repository
 	--next/-N:		install latest development version from git, instead of the latest stable release.
 	--help/-h:		show this message
 	-v:			show more verbosity
@@ -52,6 +53,10 @@ while :; do
 			shift
 			verbose=1
 			;;
+    -d | --devel)
+      shift
+      devel=1
+      ;;
 		-N | --next)
 			if [ -n "$2" ]; then
 				shift
@@ -79,10 +84,9 @@ if  [ -z "${prefix}" ]; then
 fi
 completion_dest_path="${prefix}/share/bash-completion/completions/"
 dest_path="${prefix}/bin"
-icon_dest_path="${prefix}/share/icons"
-lib_path="${prefix}/lib/smux"
 man_dest_path="${prefix}/share/man/man1"
 
+# POSIX
 set -o errexit
 set -o nounset
 # set verbosity
@@ -96,44 +100,37 @@ cd "${curr_dir}" || exit 1
 
 # if files are available, install files in dest directory
 # else download targz and uncompress it
-if [ -e "${curr_dir}/smux-enter" ]; then
-	for file in smux*; do
-		if ! install -D -m 0755 -t "${dest_path}" "${file}"; then
-			printf >&2 "Do you have permission to write to %s?\n" "${dest_path}"
-			exit 1
-		fi
-	done
+if [ -e "${curr_dir}/smux" ]; then
+  if [ "${devel}" -ne 0 ]; then
+    copy="ln -s -t"
+    if ! ${copy} "${dest_path}" "$(pwd)/smux"; then
+	    printf >&2 "Do you have permission to write to %s?\n" "${dest_path}"
+      exit 1
+    fi
+  else
+    copy="install -D -m 0644 -t"
+    if ! install -D -m 0755 -t "${dest_path}" smux; then
+	    printf >&2 "Do you have permission to write to %s?\n" "${dest_path}"
+      exit 1
+    fi
+  fi
 	if [ -e "man" ]; then
-		for file in man/man1/*; do
-			install -D -m 0644 -t "${man_dest_path}" "${file}"
-		done
-	fi
-	if [ -e "lib" ]; then
-		for file in lib/*; do
-			install -D -m 0644 -t "${lib_path}" "${file}"
+    for file in "$(pwd)"/man/man1/*; do
+		  ${copy} "${man_dest_path}" "${file}"
 		done
 	fi
 	if [ -e "completions" ]; then
-		for file in completions/*; do
-			install -D -m 0644 -t "${completion_dest_path}" "${file}"
+    for file in "$(pwd)"/completions/*; do
+			${copy} "${completion_dest_path}" "${file}"
 		done
-	fi
-	if [ -e terminal-smux-icon.png ]; then
-		install -D -m 0644 -t "${icon_dest_path}" terminal-smux-icon.png
 	fi
 else
 	printf >&2 "\033[1;31m Checking dependencies...\n\033[0m"
 	# check that we have base dependencies
-	if ! { command -v curl > /dev/null || command -v wget > /dev/null; } || ! command -v tar > /dev/null; then
-		printf >&2 "Online install depends on tar and either curl or wget\n"
+	if ! command -v wget > /dev/null || ! command -v tar > /dev/null; then
+		printf >&2 "Online install depends on tar wget\n"
 		printf >&2 "Ensure you have all dependencies installed.\n"
 		exit 1
-	fi
-
-	if command -v curl > /dev/null 2>&1; then
-		download="curl -sLo"
-	elif command -v wget > /dev/null 2>&1; then
-		download="wget -qO"
 	fi
 
 	printf >&2 "\033[1;31m Downloading...\n\033[0m"
@@ -146,41 +143,31 @@ else
 	fi
 	# go in tmp
 	tmp_dir="$(mktemp -d)"
+  if [ "${verbose}" -ne 0 ]; then
+    wget -O - "https://github.com/${release_ver}" |\
+      tar xzv --strip-components=1 --directory ${tmp_dir}
+  else
+    wget -q -O - "https://github.com/${release_ver}" |\
+      tar xz --strip-components=1 --directory ${tmp_dir}
+  fi
 	cd "${tmp_dir}"
-	# download our target
-	${download} "${release_name}" "https://github.com/${release_ver}"
 	# uncompress
-	printf >&2 "\033[1;31m Unpacking...\n\033[0m"
-	if [ "${verbose}" -ne 0 ]; then
-		tar xvf "${release_name}"
-	else
-		tar xf "${release_name}"
-	fi
+	printf >&2 "\033[1;31m Deploying...\n\033[0m"
 	# deploy our files
-	for file in "smux-$(echo "${release_name}" | sed 's/.tar.gz//g')"/smux*; do
-		if ! install -D -m 0755 -t "${dest_path}" "${file}"; then
-			printf >&2 "Do you have permission to write to %s?\n" "${dest_path}"
-			exit 1
-		fi
-	done
-	if [ -e "smux-$(echo "${release_name}" | sed 's/.tar.gz//g')/man/" ]; then
-		for file in "smux-$(echo "${release_name}" | sed 's/.tar.gz//g')"/man/man1/*; do
+  _unpack_root="smux-$(echo "${release_name}" | sed 's/.tar.gz//')"
+  if ! install -D -m 0755 -t "${dest_path}" "${_unpack_root}/smux"; then
+	  printf >&2 "Do you have permission to write to %s?\n" "${dest_path}"
+    exit 1
+  fi
+	if [ -e "${_unpack_root}/man/" ]; then
+		for file in "${_unpack_root}"/man/man1/*; do
 			install -D -m 0644 -t "${man_dest_path}" "${file}"
 		done
 	fi
-	if [ -e "smux-$(echo "${release_name}" | sed 's/.tar.gz//g')/lib/" ]; then
-		for file in "smux-$(echo "${release_name}" | sed 's/.tar.gz//g')"/lib/*; do
-			install -D -m 0644 -t "${lib_path}" "${file}"
-		done
-	fi
-	if [ -e "smux-$(echo "${release_name}" | sed 's/.tar.gz//g')/completions/" ]; then
-		for file in "smux-$(echo "${release_name}" | sed 's/.tar.gz//g')"/completions/*; do
+	if [ -e "${_unpack_root}/completions/" ]; then
+    for file in "${_unpack_root}"/completions/*; do
 			install -D -m 0644 -t "${completion_dest_path}" "${file}"
 		done
-	fi
-	if [ -e "smux-$(echo "${release_name}" | sed 's/.tar.gz//g')"/terminal-smux-icon.png ]; then
-		install -D -m 0644 -t "${icon_dest_path}" \
-			"smux-$(echo "${release_name}" | sed 's/.tar.gz//g')"/terminal-smux-icon.png
 	fi
 
 	# securely delete unneeded files

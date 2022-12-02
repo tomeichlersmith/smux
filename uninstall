@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with smux; if not, see <http://www.gnu.org/licenses/>.
 
-# POSIX
 
 verbose=0
 
@@ -77,10 +76,9 @@ if  [ -z "${prefix}" ]; then
 fi
 completion_dest_path="${prefix}/share/bash-completion/completions/"
 dest_path="${prefix}/bin"
-icon_dest_path="${prefix}/share/icons"
-lib_path="${prefix}/lib/smux"
 man_dest_path="${prefix}/share/man/man1"
 
+# POSIX
 set -o errexit
 set -o nounset
 # set verbosity
@@ -92,17 +90,12 @@ fi
 [ ! -w "${man_dest_path}" ] && printf >&2 "Cannot write into %s, permission denied.\n" "${man_dest_path}" && exit 1
 
 # uninstall
-for file in "${dest_path}/smux"*; do
-	[ -e "${file}" ] && rm "${file}"
-done
+rm -f "${dest_path}/smux"
 for file in "${man_dest_path}/smux"*; do
-	[ -e "${file}" ] && rm "${file}"
+	rm -f "${file}"
 done
 for file in "${completion_dest_path}/smux"*; do
-	[ -e "${file}" ] && rm "${file}"
+	rm -f "${file}"
 done
-[  -e "${icon_dest_path}"/terminal-smux-icon.png ] && rm "${icon_dest_path}"/terminal-smux-icon.png
-[  -e "${icon_dest_path}"/smux ] && rm -rf "${icon_dest_path}"/smux
-[  -e "${lib_path}" ] && rm -rf "${lib_path}"
 
-printf >&2 "\033[1;31m Thank you for using Distrobox. Uninstall complete.\n\033[0m"
+printf >&2 "\033[1;31m Thank you for using smux. Uninstall complete.\n\033[0m"
