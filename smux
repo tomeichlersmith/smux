@@ -1,0 +1,70 @@
+#!/bin/sh
+
+###################################################################################################
+# ssh+tmux = smux
+# 
+#   a light, POSIX wrapper around ssh to create and attach to tmux sessions on remote computers
+###################################################################################################
+
+# POSIX
+set -o errexit
+set -o nounset
+
+# print usage to stdout
+__smux_help() {
+  cat <<\HELP
+
+  Using ssh and tmux on remote computers.
+
+ USAGE: 
+  smux [-h|--help] [-l|--list] <host> [session]
+
+ OPTIONS:
+  -h|--help : print this help and exit
+  -l|--list : list the sessions on the input host and exit
+
+ ARGUMENTS:
+  host      : (required) hostname of computer you wish to attach to
+  session   : (optional) name of session to attach to on the input host 
+
+HELP
+}
+
+# list the tmux sessions on the provided remote host
+# Arguments:
+#   host - the remote computer to get a list of tmux sessions from
+# Outputs:
+#   print of tmux sessions on that host (empty if there are none)
+__smux_list() {
+  ssh -t "$1" "tmux ls 2> /dev/null"
+  return $?
+}
+
+# attach to a remote tmux session, creating it if necessary
+# Arguments:
+#   host (required) remote computer to connect to
+#   session (optional) if provided, attach to the tmux session with this name
+# Outputs:
+#   none
+__smux_attach() {
+  ssh -t "$1" "tmux attach ${2:+-t} ${2} || tmux new ${2:+-s} $2"
+  return $?
+}
+
+case "$1" in
+  ""|-h|--help)
+    __smux_help
+    exit 0
+    ;;
+  -l|--list)
+    __smux_list "$2"
+    exit 0
+    ;;    
+  -*)
+    echo "ERR: Unknown option $1"
+    exit 1
+    ;;
+  *)
+    __smux_attach "$1" "$2"
+    exit $?
+esac

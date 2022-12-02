@@ -1,0 +1,48 @@
+# shellcheck disable=all
+
+__smux() {
+  if ! hash _ssh &> /dev/null; then
+    # __load_completion is a bash internal that is used
+    #   to expand the tab completion set of functions if
+    #   no function is defined
+    #   it defines the ssh completion function _ssh
+    __load_completion ssh || return $?
+  fi 
+
+  # disable readline filename completion
+  compopt +o default
+
+  local __curr_word="${COMP_WORDS[$COMP_CWORD]}"
+
+  if [[ "$COMP_CWORD" == "1" ]]; then
+    if [[ "${__curr_word}" == -* ]]; then
+      # option
+      COMPREPLY=($(compgen -W "-h --help -l --list" -- "${__curr_word}"))
+    else
+      # host, use ssh tab completion
+      _ssh
+      return $?
+    fi
+  else
+    case "${COMP_WORDS[1]}" in
+      -l|--list)
+        # shift inputs so _ssh tab complete works
+        # TODO fixme
+        #    I don't work because ssh tab completion is already too smart
+        COMP_WORDS=(${COMP_WORDS[@]:1})
+        COMP_CWORD=$((COMP_CWORD - 1))
+        _ssh
+        return $?
+        ;;
+      *)
+        # no other tab complete implemented,
+        #   we /could/ try tab completing tmux sessions on the host
+        #   that is already selected, but that would make tab complete
+        #   slow since it would have to ssh there to find out the list
+        COMPREPLY=()
+        ;;
+    esac
+  fi
+}
+
+complete -F __smux smux
