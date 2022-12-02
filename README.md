@@ -38,6 +38,13 @@ Want to see what tmux sessions are already created on a specific remote, you can
 
     smux --list destination
 
+# INSTALLATION
+
+You can install or update smux by obtaining the source code from the repository https://github.com/tomeichlersmith/smux either by cloning it or by downloading one of the releases and then running the installation command.
+
+    cd smux
+    ./install
+
 # CONTRIBUTING
 
 Feel free to create a fork of https://github.com/tomeichlersmith/smux and open a Pull Request with any bug patches or feature improvements. We aim to keep smux as a single file with optional completion and manual files in parallel. Check that smux is still POSIX with dash.

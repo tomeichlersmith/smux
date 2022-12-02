@@ -73,7 +73,7 @@ __smux_ssh_opts=""
 __list=""
 __smux_dest=""
 __smux_sesh=""
-while :; do
+while [ "$#" -gt 0 ]; do
   case $1 in
     --help)
       __smux_help

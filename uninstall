@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU General Public License
 # along with smux; if not, see <http://www.gnu.org/licenses/>.
 
+# POSIX
+set -o errexit
+set -o nounset
 
 verbose=0
 
@@ -37,7 +40,7 @@ EOF
 }
 
 # Parse arguments
-while :; do
+while [ "$#" -gt 0 ]; do
 	case $1 in
 		-h | --help)
 			# Call a "show_help" function to display a synopsis, then exit.
@@ -67,10 +70,15 @@ while :; do
 	esac
 done
 
+# set verbosity
+if [ "${verbose}" -ne 0 ]; then
+	set -o xtrace
+fi
+
 if  [ -z "${prefix}" ]; then
 	prefix="/usr/local"
 	# in case we're not root, just default to the home directory
-	if [ "$(id -u)" -ne 0 ]; then
+	if [ "$(id -u || true)" -ne 0 ]; then
 		prefix="${HOME}/.local"
 	fi
 fi
@@ -78,13 +86,6 @@ completion_dest_path="${prefix}/share/bash-completion/completions/"
 dest_path="${prefix}/bin"
 man_dest_path="${prefix}/share/man/man1"
 
-# POSIX
-set -o errexit
-set -o nounset
-# set verbosity
-if [ "${verbose}" -ne 0 ]; then
-	set -o xtrace
-fi
 
 [ ! -w "${dest_path}" ] && printf >&2 "Cannot write into %s, permission denied.\n" "${dest_path}" && exit 1
 [ ! -w "${man_dest_path}" ] && printf >&2 "Cannot write into %s, permission denied.\n" "${man_dest_path}" && exit 1
