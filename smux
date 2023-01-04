@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with smux; if not, see <http://www.gnu.org/licenses/>.
 
-smux_version=1.0.0
+smux_version=1.0.1
 
 # POSIX
 set -o errexit

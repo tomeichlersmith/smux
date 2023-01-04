@@ -1,6 +1,6 @@
 # NAME
 
-smux v1.0.0
+smux v1.0.1
 
 # SYNOPSIS
 
