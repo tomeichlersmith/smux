@@ -40,6 +40,22 @@ Want to see what tmux sessions are already created on a specific remote, you can
 
 # INSTALLATION
 
+## curl
+
+If you trust me (or have proofread the install script), you can install smux with a one-liner.
+
+    curl -s https://raw.githubusercontent.com/tomeichlersmith/smux/main/install | sh 
+
+By default, this installs smux to ~/.local if you are a non-root user.
+You can define the install prefix (--prefix dir) and 
+choose to use the HEAD of the main branch rather
+than the last release (--next) both of which are optional.
+
+    curl -s https://raw.githubusercontent.com/tomeichlersmith/smux/main/install | \
+      sh -s -- --prefix dir --next
+
+## git
+
 You can install or update smux by obtaining the source code from the repository https://github.com/tomeichlersmith/smux either by cloning it or by downloading one of the releases and then running the installation command.
 
     cd smux
